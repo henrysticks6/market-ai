@@ -125,6 +125,13 @@ div[data-testid="stSelectbox"] div {
 </style>
 """, unsafe_allow_html=True)
 
+def header(title, subtitle):
+    st.markdown(
+        f'<div class="hero"><h1>{title}</h1><p>{subtitle}</p></div>',
+        unsafe_allow_html=True
+    )
+    st.write("")
+
 MODULES = [
     "Dashboard", "Create Advert", "AI Video Studio", "AI Assistant",
     "Products", "Events", "Beauty", "Business Services",
