@@ -8,19 +8,121 @@ from services.news import get_news
 st.set_page_config(page_title="MARKET AI", page_icon="🌐", layout="wide", initial_sidebar_state="expanded")
 init_db()
 
+
 st.markdown("""
 <style>
-:root { --blue:#1677D2; --green:#16A36A; --navy:#10243A; }
-.stApp { background: linear-gradient(145deg,#f7fbff 0%,#eef7ff 55%,#f4fff9 100%); }
-[data-testid="stSidebar"] { background:#10243A; }
-[data-testid="stSidebar"] * { color:#fff !important; }
-.hero { padding:1.5rem 1.7rem; border-radius:22px; color:white;
-background:linear-gradient(115deg,#1269bd 0%,#1688d8 48%,#16a36a 100%); }
-.hero h1 { font-size:2.45rem; margin:0; letter-spacing:-1px; }
-.hero p { opacity:.95; margin:.35rem 0 0 0; }
-.metric-card { background:white; border:1px solid #deebf5; border-radius:16px; padding:16px; }
-.small-muted { color:#5b7084; font-size:.9rem; }
-div.stButton > button[kind="primary"] { background:linear-gradient(90deg,#1677D2,#16A36A); border:0; }
+:root {
+    --blue: #1677D2;
+    --green: #16A36A;
+    --navy: #10243A;
+}
+
+/* Main application background */
+.stApp {
+    background: linear-gradient(
+        145deg,
+        var(--background-color, #f7fbff) 0%,
+        #eef7ff 55%,
+        #f4fff9 100%
+    );
+}
+
+/* Main content width and spacing */
+.block-container {
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background: var(--navy);
+}
+
+[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+/* Hero section */
+.hero {
+    padding: 1.5rem 1.7rem;
+    border-radius: 22px;
+    color: white !important;
+    background: linear-gradient(
+        115deg,
+        #1269bd 0%,
+        #1688d8 48%,
+        #16a36a 100%
+    );
+}
+
+.hero h1 {
+    font-size: 2.45rem;
+    margin: 0;
+    letter-spacing: -1px;
+    color: white !important;
+}
+
+.hero p {
+    opacity: .95;
+    margin: .35rem 0 0 0;
+    color: white !important;
+}
+
+/* Dashboard and feature cards */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    border-radius: 16px;
+}
+
+/* Buttons */
+div.stButton > button {
+    border-radius: 12px;
+    min-height: 45px;
+    font-weight: 600;
+    transition: all .2s ease;
+}
+
+div.stButton > button[kind="primary"] {
+    background: linear-gradient(90deg, #1677D2, #16A36A);
+    border: 0;
+    color: white;
+}
+
+div.stButton > button:hover {
+    border-color: var(--green);
+}
+
+/* Form fields */
+div[data-testid="stTextInput"] input,
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stSelectbox"] div {
+    border-radius: 10px;
+}
+
+/* Small supporting text */
+.small-muted {
+    font-size: .9rem;
+}
+
+/* Mobile layout */
+@media (max-width: 640px) {
+    .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .hero {
+        padding: 1.2rem;
+        border-radius: 16px;
+    }
+
+    .hero h1 {
+        font-size: 1.7rem;
+    }
+
+    div.stButton > button {
+        font-size: .85rem;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
