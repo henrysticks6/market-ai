@@ -8,7 +8,6 @@ from services.news import get_news
 st.set_page_config(page_title="MARKET AI", page_icon="🌐", layout="wide", initial_sidebar_state="expanded")
 init_db()
 
-
 st.markdown("""
 <style>
 :root {
