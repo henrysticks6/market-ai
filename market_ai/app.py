@@ -30,16 +30,103 @@ MODULES = [
     "Social Hub", "Market Live", "Campaigns", "Analytics",
     "Publicity Network", "Creator Network", "Business Profile", "Settings"
 ]
-with st.sidebar:
-    st.markdown("## 🌐 MARKET AI")
+
+# MOBILE-FRIENDLY MARKET AI NAVIGATION
+
+# Keep existing internal page names so existing features continue working.
+HIDDEN_MODULES = [
+    "Create Advert",
+    "Products",
+    "Events",
+    "Beauty",
+    "Business Services"
+]
+
+NAV_LABELS = {
+    "AI Video Studio": "AI Creative Studio",
+    "Publicity Network": "Market Feed"
+}
+
+NAV_ICONS = {
+    "Dashboard": "🏠",
+    "AI Assistant": "🤖",
+    "AI Video Studio": "🎬",
+    "Social Hub": "📱",
+    "Market Live": "🌍",
+    "Campaigns": "📢",
+    "Analytics": "📊",
+    "Publicity Network": "🏪",
+    "Creator Network": "🎨",
+    "Business Profile": "👤",
+    "Settings": "⚙️"
+}
+
+NAV_ITEMS = [
+    item for item in MODULES
+    if item not in HIDDEN_MODULES
+]
+
+if not NAV_ITEMS:
+    st.error("No navigation modules are configured.")
+    st.stop()
+
+if "market_ai_page" not in st.session_state:
+    st.session_state["market_ai_page"] = (
+        "Dashboard" if "Dashboard" in NAV_ITEMS
+        else NAV_ITEMS[0]
+    )
+
+if st.session_state["market_ai_page"] not in NAV_ITEMS:
+    st.session_state["market_ai_page"] = (
+        "Dashboard" if "Dashboard" in NAV_ITEMS
+        else NAV_ITEMS[0]
+    )
+
+# TOP BAR
+brand_col, menu_col = st.columns([4, 1])
+
+with brand_col:
+    st.markdown("### 🌐 MARKET AI")
     st.caption("Every Business Deserves a Voice.")
-    page = st.radio("WORKSPACE", MODULES, label_visibility="visible")
-    st.divider()
-    st.caption("Build small. Build properly. Design for scale.")
+
+with menu_col:
+    with st.popover("☰ Menu"):
+        st.markdown("### Explore MARKET AI")
+        st.caption("Select a feature")
+
+        nav_columns = st.columns(2)
+
+        for index, route in enumerate(NAV_ITEMS):
+            display_name = NAV_LABELS.get(route, route)
+            icon = NAV_ICONS.get(route, "✨")
+
+            with nav_columns[index % 2]:
+                if st.button(
+                    f"{icon}\n{display_name}",
+                    key=f"market_nav_{index}",
+                    use_container_width=True
+                ):
+                    st.session_state["market_ai_page"] = route
+                    st.rerun()
+
+# CURRENT PAGE
+page = st.session_state["market_ai_page"]
+
+# HOME / BACK NAVIGATION
+if page != "Dashboard" and "Dashboard" in NAV_ITEMS:
+    if st.button("← Back to Dashboard"):
+        st.session_state["market_ai_page"] = "Dashboard"
+        st.rerun()
+
 
 def header(title, subtitle):
-    st.markdown(f'<div class="hero"><h1>{title}</h1><p>{subtitle}</p></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="hero"><h1>{title}</h1>'
+        f'<p>{subtitle}</p></div>',
+        unsafe_allow_html=True
+    )
     st.write("")
+
 
 def metric(label, value, note):
     st.markdown(f'<div class="metric-card"><div class="small-muted">{label}</div><h2>{value}</h2><div class="small-muted">{note}</div></div>', unsafe_allow_html=True)
