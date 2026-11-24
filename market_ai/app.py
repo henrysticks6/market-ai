@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 from services.db import init_db, save_business, list_businesses, save_campaign, list_campaigns
 from services.ai import generate_marketing_copy, assistant_reply
 from services.video import generate_video, poll_video
