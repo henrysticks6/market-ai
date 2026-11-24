@@ -88,35 +88,387 @@ elif page == "Business Profile":
             st.write(b["description"])
             st.caption(f'{b["location"]} · {b["contact"]}')
 
-elif page in ["Create Advert","Products","Events","Beauty","Business Services"]:
+elif page in ["Create Advert", "Products", "Events", "Beauty", "Business Services"]:
     section = page if page != "Create Advert" else "All categories"
-    header("AI Advert Studio", f"Create advertising concepts for {section.lower()}.")
-    st.info("This workflow creates campaign copy and a production brief. Image/video rendering requires the relevant connected generation provider.")
-    category_options = ["Product","Event","Beauty & lifestyle","Business service","Fashion","Food & beverage","Real estate","Other"]
-    category = st.selectbox("What are you advertising?", category_options,
-        index=category_options.index("Product") if page=="Products" else category_options.index("Event") if page=="Events" else category_options.index("Beauty & lifestyle") if page=="Beauty" else category_options.index("Business service") if page=="Business Services" else 0)
-    uploaded = st.file_uploader("Upload product image, event flyer or business image", type=["png","jpg","jpeg","webp","pdf"])
-    business_name = st.text_input("Business / brand name")
-    offer = st.text_input("What are you promoting?")
-    audience = st.text_input("Who should this advert reach?", placeholder="e.g. working professionals in Abuja")
-    key_details = st.text_area("Important details to preserve", placeholder="Price, date, venue, address, phone number, features...")
-    tone = st.selectbox("Advertising style",["Professional","Luxury","Energetic","Friendly","Emotional storytelling","Minimal and modern"])
-    length = st.selectbox("Campaign length",["15 seconds","30 seconds","60 seconds","Social post only"])
-    if st.button("Create advertising concept", type="primary"):
+    header(
+        "AI Advert Studio",
+        f"Create intelligent advertising campaigns for {section.lower()}."
+    )
+
+    st.info(
+        "Tell Market AI what you want to promote. "
+        "It will prepare the advertising concept and campaign for you."
+    )
+
+    category_options = [
+        "Product",
+        "Church / Ministry",
+        "Event / Programme",
+        "Business service",
+        "School / Education",
+        "Beauty & lifestyle",
+        "Fashion",
+        "Food & beverage",
+        "Real estate",
+        "Other"
+    ]
+
+    default_category = {
+        "Products": "Product",
+        "Events": "Event / Programme",
+        "Beauty": "Beauty & lifestyle",
+        "Business Services": "Business service"
+    }.get(page, "Product")
+
+    category = st.selectbox(
+        "What are you advertising?",
+        category_options,
+        index=category_options.index(default_category)
+    )
+
+    st.divider()
+
+    # CATEGORY-SPECIFIC INFORMATION
+
+    business_name = ""
+    offer = ""
+    details_parts = []
+    uploaded = None
+    price = ""
+
+    if category == "Product":
+        st.subheader("Product information")
+
+        business_name = st.text_input("Business / brand name")
+        offer = st.text_input("Product name *")
+        product_description = st.text_area(
+            "Describe your product",
+            placeholder="Explain what it does, its benefits and important features."
+        )
+        price = st.text_input("Product price *")
+        location = st.text_input("Business location")
+        phone = st.text_input("Phone / WhatsApp number")
+
+        uploaded = st.file_uploader(
+            "Upload product image (optional)",
+            type=["png", "jpg", "jpeg", "webp"],
+            key="product_ad_image"
+        )
+
+        details_parts = [
+            f"Product description: {product_description}",
+            f"Price: {price}",
+            f"Location: {location}",
+            f"Contact: {phone}"
+        ]
+
+    elif category == "Church / Ministry":
+        st.subheader("Church and programme information")
+
+        business_name = st.text_input("Church / ministry name")
+        programme = st.text_input("Programme name *")
+        theme = st.text_input("Programme theme")
+        offer = programme
+
+        event_date = st.text_input("Programme date")
+        event_time = st.text_input("Programme time")
+        venue = st.text_input("Venue / address")
+        phone = st.text_input("Church contact number (optional)")
+
+        uploaded = st.file_uploader(
+            "Upload church logo or programme flyer (optional)",
+            type=["png", "jpg", "jpeg", "webp", "pdf"],
+            key="church_ad_image"
+        )
+
+        details_parts = [
+            f"Programme: {programme}",
+            f"Theme: {theme}",
+            f"Date: {event_date}",
+            f"Time: {event_time}",
+            f"Venue: {venue}",
+            f"Contact: {phone}"
+        ]
+
+    elif category == "Event / Programme":
+        st.subheader("Event information")
+
+        business_name = st.text_input("Event organiser")
+        offer = st.text_input("Event name *")
+        event_date = st.text_input("Event date")
+        event_time = st.text_input("Event time")
+        venue = st.text_input("Event venue")
+        price = st.text_input("Ticket price (optional)")
+        phone = st.text_input("Contact number")
+
+        uploaded = st.file_uploader(
+            "Upload event flyer or image",
+            type=["png", "jpg", "jpeg", "webp", "pdf"],
+            key="event_ad_image"
+        )
+
+        details_parts = [
+            f"Date: {event_date}",
+            f"Time: {event_time}",
+            f"Venue: {venue}",
+            f"Ticket price: {price}",
+            f"Contact: {phone}"
+        ]
+
+    elif category == "Business service":
+        st.subheader("Business information")
+
+        business_name = st.text_input("Business name")
+        offer = st.text_input("What service are you promoting? *")
+        description = st.text_area("Describe your services")
+        price = st.text_input("Price / starting price (optional)")
+        location = st.text_input("Business location")
+        phone = st.text_input("Phone / WhatsApp number")
+
+        uploaded = st.file_uploader(
+            "Upload business logo or image (optional)",
+            type=["png", "jpg", "jpeg", "webp"],
+            key="service_ad_image"
+        )
+
+        details_parts = [
+            f"Services: {description}",
+            f"Price: {price}",
+            f"Location: {location}",
+            f"Contact: {phone}"
+        ]
+
+    elif category == "School / Education":
+        st.subheader("School information")
+
+        business_name = st.text_input("School / institution name")
+        offer = st.text_input("What are you promoting? *")
+        description = st.text_area("Courses, admissions or programmes")
+        location = st.text_input("School location")
+        phone = st.text_input("Contact number")
+        price = st.text_input("Fees (optional)")
+
+        uploaded = st.file_uploader(
+            "Upload school logo or flyer (optional)",
+            type=["png", "jpg", "jpeg", "webp", "pdf"],
+            key="school_ad_image"
+        )
+
+        details_parts = [
+            f"Description: {description}",
+            f"Location: {location}",
+            f"Contact: {phone}",
+            f"Fees: {price}"
+        ]
+
+    elif category == "Beauty & lifestyle":
+        st.subheader("Beauty and lifestyle information")
+
+        business_name = st.text_input("Business / brand name")
+        offer = st.text_input("Product or service name *")
+        description = st.text_area("Describe the product or service")
+        price = st.text_input("Price (optional)")
+        location = st.text_input("Location")
+        phone = st.text_input("Phone / WhatsApp number")
+
+        uploaded = st.file_uploader(
+            "Upload product or business image (optional)",
+            type=["png", "jpg", "jpeg", "webp"],
+            key="beauty_ad_image"
+        )
+
+        details_parts = [
+            f"Description: {description}",
+            f"Price: {price}",
+            f"Location: {location}",
+            f"Contact: {phone}"
+        ]
+
+    elif category == "Fashion":
+        st.subheader("Fashion information")
+
+        business_name = st.text_input("Fashion brand / business name")
+        offer = st.text_input("What fashion item or service are you promoting? *")
+        description = st.text_area("Describe the item or service")
+        price = st.text_input("Price (optional)")
+        location = st.text_input("Location")
+        phone = st.text_input("Contact number")
+
+        uploaded = st.file_uploader(
+            "Upload fashion product image (optional)",
+            type=["png", "jpg", "jpeg", "webp"],
+            key="fashion_ad_image"
+        )
+
+        details_parts = [
+            f"Description: {description}",
+            f"Price: {price}",
+            f"Location: {location}",
+            f"Contact: {phone}"
+        ]
+
+    elif category == "Food & beverage":
+        st.subheader("Food and restaurant information")
+
+        business_name = st.text_input("Restaurant / food business name")
+        offer = st.text_input("Food or drink being promoted *")
+        description = st.text_area("Describe the food or drink")
+        price = st.text_input("Price (if applicable)")
+        location = st.text_input("Location")
+        phone = st.text_input("Contact number")
+
+        uploaded = st.file_uploader(
+            "Upload food or restaurant image (optional)",
+            type=["png", "jpg", "jpeg", "webp"],
+            key="food_ad_image"
+        )
+
+        details_parts = [
+            f"Description: {description}",
+            f"Price: {price}",
+            f"Location: {location}",
+            f"Contact: {phone}"
+        ]
+
+    elif category == "Real estate":
+        st.subheader("Property information")
+
+        business_name = st.text_input("Agency / property owner")
+        offer = st.text_input("Property type or offer *")
+        description = st.text_area("Describe the property")
+        price = st.text_input("Property price (optional)")
+        location = st.text_input("Property location")
+        phone = st.text_input("Contact number")
+
+        uploaded = st.file_uploader(
+            "Upload property images (optional)",
+            type=["png", "jpg", "jpeg", "webp"],
+            key="property_ad_image"
+        )
+
+        details_parts = [
+            f"Description: {description}",
+            f"Price: {price}",
+            f"Location: {location}",
+            f"Contact: {phone}"
+        ]
+
+    else:
+        st.subheader("Advertising information")
+
+        business_name = st.text_input("Business / organisation name")
+        offer = st.text_input("What are you promoting? *")
+        description = st.text_area("Describe what you are promoting")
+        price = st.text_input("Price (optional)")
+        location = st.text_input("Location")
+        phone = st.text_input("Contact number")
+
+        uploaded = st.file_uploader(
+            "Upload an image or flyer (optional)",
+            type=["png", "jpg", "jpeg", "webp", "pdf"],
+            key="other_ad_image"
+        )
+
+        details_parts = [
+            f"Description: {description}",
+            f"Price: {price}",
+            f"Location: {location}",
+            f"Contact: {phone}"
+        ]
+
+    st.divider()
+
+    # CAMPAIGN PREFERENCES
+
+    st.subheader("Advertising preferences")
+
+    audience = st.text_input(
+        "Who should this advert reach?",
+        placeholder="e.g. families, business owners, young people in Abuja"
+    )
+
+    tone = st.selectbox(
+        "Advertising style",
+        [
+            "Let Market AI decide",
+            "Professional",
+            "Luxury",
+            "Energetic",
+            "Friendly",
+            "Emotional storytelling",
+            "Corporate",
+            "Cinematic",
+            "Minimal and modern"
+        ]
+    )
+
+    length = st.selectbox(
+        "Campaign length",
+        ["15 seconds", "30 seconds", "60 seconds", "Social post only"]
+    )
+
+    extra_instructions = st.text_area(
+        "Anything else Market AI should know? (optional)",
+        placeholder="Special instructions, preferred message or creative direction."
+    )
+
+    details_parts.append(f"Additional instructions: {extra_instructions}")
+    details = "\n".join(
+        item for item in details_parts
+        if item and not item.endswith(": ")
+    )
+
+    # GENERATE ADVERTISING CAMPAIGN
+
+    if st.button("Create my advertising campaign", type="primary"):
         if not offer.strip():
-            st.warning("Describe what you are promoting first.")
+            st.warning("Please tell Market AI what you are promoting.")
+        elif category == "Product" and not price.strip():
+            st.warning("Please enter your product price.")
+        elif category == "Church / Ministry" and not business_name.strip():
+            st.warning("Please enter your church or ministry name.")
         else:
-            with st.spinner("Developing your campaign..."):
-                result = generate_marketing_copy(category, business_name, offer, audience, key_details, tone, length, uploaded)
+            with st.spinner("Market AI is developing your campaign..."):
+                result = generate_marketing_copy(
+                    category,
+                    business_name,
+                    offer,
+                    audience,
+                    details,
+                    tone,
+                    length,
+                    uploaded
+                )
+
             st.session_state["last_ad"] = result
-            st.session_state["last_campaign_meta"] = (category,business_name,offer)
+            st.session_state["last_campaign_meta"] = (
+                category,
+                business_name,
+                offer
+            )
+
+    # CAMPAIGN PREVIEW AND SAVING
+
     if "last_ad" in st.session_state:
-        st.subheader("Your advertising concept")
+        st.divider()
+        st.subheader("Your Market AI advertising campaign")
         st.markdown(st.session_state["last_ad"])
+
         if st.button("Save campaign"):
-            meta = st.session_state.get("last_campaign_meta",("General","","Campaign"))
-            save_campaign(meta[1] or "My business", meta[0], meta[2], st.session_state["last_ad"])
-            st.success("Campaign saved.")
+            meta = st.session_state.get(
+                "last_campaign_meta",
+                ("General", "", "Campaign")
+            )
+
+            save_campaign(
+                meta[1] or "My business",
+                meta[0],
+                meta[2],
+                st.session_state["last_ad"]
+            )
+
+            st.success("Campaign saved successfully.")
+
 
 elif page == "AI Video Studio":
     header("AI Video Studio","Generate real promotional video using a connected video-generation API.")
