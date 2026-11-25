@@ -222,6 +222,7 @@ page = st.session_state["market_ai_page"]
 
 # HOME / BACK NAVIGATION
 
+
 if page == "Dashboard":
     st.markdown("""
     <div style="
@@ -255,6 +256,104 @@ if page == "Dashboard":
         "☰ Open the Menu above to explore MARKET AI features "
         "and start creating."
     )
+
+    st.divider()
+
+    # LIVE NEWS SECTION
+    st.markdown("### 🌍 Latest News & Updates")
+    st.caption(
+        "Business, technology, entrepreneurship and news "
+        "from Nigeria and around the world."
+    )
+
+    if st.button("🔄 Refresh news", key="dashboard_refresh_news"):
+        st.session_state.pop("dashboard_news", None)
+
+    if "dashboard_news" not in st.session_state:
+        dashboard_items = []
+        seen_links = set()
+
+        categories = [
+            "Business",
+            "Technology & AI",
+            "Nigeria",
+            "Africa"
+        ]
+
+        with st.spinner("Loading the latest news..."):
+            for category in categories:
+                try:
+                    news = get_news(category)
+
+                    for item in news:
+                        link = item.get("link", "")
+
+                        if link and link not in seen_links:
+                            seen_links.add(link)
+                            dashboard_items.append(item)
+
+                except Exception:
+                    continue
+
+        st.session_state["dashboard_news"] = dashboard_items[:12]
+
+    news_items = st.session_state["dashboard_news"]
+
+    if not news_items:
+        st.info(
+            "News is temporarily unavailable. "
+            "Please try refreshing in a moment."
+        )
+
+    else:
+        for start in range(0, min(len(news_items), 6), 3):
+            columns = st.columns(3)
+
+            for index, item in enumerate(
+                news_items[start:start + 3]
+            ):
+                with columns[index]:
+                    with st.container(border=True):
+
+                        image_url = item.get("image")
+
+                        if image_url:
+                            st.image(image_url, use_container_width=True)
+
+                        st.markdown(
+                            f"**{item.get('title', 'News update')}**"
+                        )
+
+                        st.caption(
+                            f"{item.get('source', 'News source')} · "
+                            f"{item.get('published', '')}"
+                        )
+
+                        summary = item.get("summary", "")
+                        if summary:
+                            st.write(summary[:250])
+
+                        link = item.get("link", "")
+
+                        if link and link != "#":
+                            st.markdown(
+                                f"[Read full story]({link})"
+                            )
+
+    st.divider()
+
+    # PUBLIC MARKET FEED
+    st.markdown("### 📢 Market Feed")
+    st.write(
+        "Discover products, services and businesses promoted "
+        "by the MARKET AI community."
+    )
+
+    st.info(
+        "Community adverts will appear here when advertisers "
+        "choose to make their campaigns public."
+    )
+
 
 elif page == "Business Profile":
     header("Business Profile","Tell Market AI what you offer so it can create more relevant campaigns.")
