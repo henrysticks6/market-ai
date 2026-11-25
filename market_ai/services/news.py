@@ -2,7 +2,17 @@ import feedparser
 from html.parser import HTMLParser
 
 
+
 FEEDS = {
+    "Nigeria Business": [
+        "https://news.google.com/rss/search?q=Nigeria+business+OR+economy&hl=en-NG&gl=NG&ceid=NG:en"
+    ],
+    "Nigeria Politics": [
+        "https://news.google.com/rss/search?q=Nigeria+politics+OR+government&hl=en-NG&gl=NG&ceid=NG:en"
+    ],
+    "Nigeria News": [
+        "https://news.google.com/rss/search?q=Nigeria+latest+news&hl=en-NG&gl=NG&ceid=NG:en"
+    ],
     "Business": [
         "https://feeds.bbci.co.uk/news/business/rss.xml"
     ],
@@ -13,10 +23,7 @@ FEEDS = {
         "https://www.entrepreneur.com/latest.rss"
     ],
     "Finance": [
-        "https://feeds.bbci.co.uk/news/business/rss.xml"
-    ],
-    "Nigeria": [
-        "https://news.google.com/rss/search?q=Nigeria+business&hl=en-NG&gl=NG&ceid=NG:en"
+        "https://news.google.com/rss/search?q=finance+markets&hl=en&gl=US&ceid=US:en"
     ],
     "Africa": [
         "https://feeds.bbci.co.uk/news/world/africa/rss.xml"
