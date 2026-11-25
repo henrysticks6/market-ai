@@ -20,7 +20,6 @@ st.markdown("""
     --navy: #10243A;
 }
 
-
 # STEP 2.3 — MARKET AI LIGHT AND DARK THEMES
 theme_mode = st.session_state.get("market_ai_theme", "Light Mode")
 is_dark = theme_mode == "Dark Mode"
