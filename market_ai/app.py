@@ -785,38 +785,142 @@ elif page in ["Create Advert", "Products", "Events", "Beauty", "Business Service
             st.success("Campaign saved successfully.")
 
 
+
+
 elif page == "AI Video Studio":
-    header("AI Video Studio","Generate real promotional video using a connected video-generation API.")
-    st.warning("Real rendering requires a provider API key, a supported model and available provider credits. This app does not pretend a text storyboard is a generated video.")
-    provider = st.selectbox("Provider",["Replicate"])
-    model = st.text_input("Replicate model slug", value=os.getenv("REPLICATE_MODEL",""), placeholder="owner/model-name")
-    prompt = st.text_area("Describe the video", placeholder="A cinematic 15-second advert showing...")
-    image = st.file_uploader("Optional reference image", type=["png","jpg","jpeg","webp"])
-    duration = st.selectbox("Target duration",["5 seconds","10 seconds","15 seconds"])
-    if st.button("Generate real AI video", type="primary"):
-        if not model.strip() or not prompt.strip():
-            st.error("Enter a supported model slug and a detailed prompt.")
+    header(
+        "AI Video Studio",
+        "Create promotional videos with AI and prepare them for deployment."
+    )
+
+    st.info(
+        "Create videos from text descriptions. "
+        "Your finished videos will be previewed inside MARKET AI."
+    )
+
+    model = st.text_input(
+        "Video generation model",
+        value=os.getenv("REPLICATE_MODEL", ""),
+        placeholder="owner/model-name"
+    )
+
+    prompt = st.text_area(
+        "Describe the video you want",
+        placeholder=(
+            "Example: Create a cinematic advert showing a "
+            "professional barber giving a customer a stylish haircut. "
+            "Use attractive lighting and premium visuals."
+        ),
+        height=150
+    )
+
+    duration = st.selectbox(
+        "Video duration",
+        ["5 seconds", "10 seconds", "15 seconds"]
+    )
+
+    if st.button("Generate AI Video", type="primary"):
+        if not model.strip():
+            st.error("Please configure a supported video-generation model.")
+        elif not prompt.strip():
+            st.error("Please describe the video you want to create.")
         else:
-            with st.spinner("Submitting video generation request..."):
-                result = generate_video(model.strip(), prompt.strip(), image, duration)
-            if result.get("error"): st.error(result["error"])
+            with st.spinner("MARKET AI is generating your video..."):
+                try:
+                    result = generate_video(
+                        model=model.strip(),
+                        prompt=prompt.strip(),
+                        image_file=None,
+                        duration=duration
+                    )
+
+                    if isinstance(result, dict):
+                        prediction_id = (
+                            result.get("id")
+                            or result.get("prediction_id")
+                        )
+                        error = result.get("error")
+
+                        if error:
+                            st.error(str(error))
+                        elif prediction_id:
+                            st.session_state["market_ai_video_id"] = prediction_id
+                            st.session_state["market_ai_video_prompt"] = prompt.strip()
+                            st.session_state["market_ai_video_model"] = model.strip()
+                            st.success("Video generation started.")
+                        else:
+                            st.error("The video provider did not return a generation ID.")
+                    else:
+                        st.error("Unexpected response from the video provider.")
+
+                except Exception as e:
+                    st.error(f"Video generation failed: {e}")
+
+    prediction_id = st.session_state.get("market_ai_video_id")
+
+    if prediction_id:
+        st.subheader("Your Video")
+
+        if st.button("Check Video Status"):
+            try:
+                with st.spinner("Checking video generation..."):
+                    result = poll_video(prediction_id)
+
+                if isinstance(result, dict):
+                    status = str(result.get("status", "")).lower()
+                    video_url = result.get("url") or result.get("video_url")
+                    error = result.get("error")
+
+                    if error:
+                        st.error(str(error))
+                    elif video_url:
+                        st.session_state["market_ai_video_url"] = video_url
+                        st.session_state["market_ai_video_id"] = None
+                        st.success("Your video is ready.")
+                    elif status in ("failed", "canceled", "cancelled"):
+                        st.error("Video generation failed. Please try again.")
+                    else:
+                        st.info(f"Video status: {status or 'Processing'}")
+                else:
+                    st.error("Unable to read the video provider response.")
+
+            except Exception as e:
+                st.error(f"Could not check video status: {e}")
+
+    video_url = st.session_state.get("market_ai_video_url")
+
+    if video_url:
+        st.video(video_url)
+        st.success("Your video is ready for deployment.")
+
+        st.text_input(
+            "Social media handle (optional)",
+            key="market_ai_video_social_handle",
+            placeholder="@yourbusiness"
+        )
+
+        st.checkbox(
+            "I confirm that this video is ready for deployment.",
+            key="market_ai_video_confirm"
+        )
+
+        if st.button("Confirm & Send for Deployment", type="primary"):
+            if not st.session_state.get("market_ai_video_confirm"):
+                st.warning("Please confirm before sending.")
             else:
-                st.session_state["video_prediction_id"] = result["id"]
-                st.success(f'Request submitted. Job ID: {result["id"]}')
-                st.caption("Keep this page open and check the job status below.")
-    job_id = st.session_state.get("video_prediction_id")
-    if job_id:
-        st.write("**Generation status**")
-        if st.button("Check video status"):
-            result = poll_video(job_id)
-            if result.get("error"): st.error(result["error"])
-            else:
-                st.write("Status:", result.get("status"))
-                if result.get("video_url"):
-                    st.video(result["video_url"])
-                    st.markdown(f'[Open generated video]({result["video_url"]})')
-                elif result.get("status") == "failed":
-                    st.error(result.get("details","The provider reported a generation failure."))
+                st.session_state["market_ai_pending_deployment"] = {
+                    "type": "video",
+                    "video_url": video_url,
+                    "social_handle": st.session_state.get(
+                        "market_ai_video_social_handle", ""
+                    ),
+                    "status": "pending"
+                }
+                st.success(
+                    "Your video has been prepared for deployment. "
+                    "Publishing will be activated when the deployment "
+                    "channels are connected."
+                )
 
 elif page == "AI Assistant":
     header("Market AI Assistant","Your conversational business and marketing partner.")
