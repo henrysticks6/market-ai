@@ -223,98 +223,38 @@ page = st.session_state["market_ai_page"]
 # HOME / BACK NAVIGATION
 
 if page == "Dashboard":
-    header(
-        "Your business deserves to be seen.",
-        "Your AI-powered workspace for advertising, publicity and business growth."
+    st.markdown("""
+    <div style="
+        padding: 45px 25px;
+        border-radius: 22px;
+        background: linear-gradient(120deg, #10243A, #1677D2, #16A36A);
+        color: white;
+        margin-bottom: 25px;
+    ">
+        <h1 style="color:white; font-size:2.4rem;">
+            Welcome to MARKET AI 👋
+        </h1>
+        <h3 style="color:white;">
+            Every Business Deserves a Voice.
+        </h3>
+        <p style="color:white; font-size:1.05rem;">
+            Your creative workspace for advertising,
+            publicity and business growth.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("### Your creative workspace")
+
+    st.write(
+        "Everything you need to promote your business "
+        "is waiting in your menu."
     )
 
-    businesses = list_businesses()
-    campaigns = list_campaigns()
-
-    # Dashboard metrics
-    st.subheader("Your workspace")
-
-    metric_cards = [
-        ("🏢 Business profiles", len(businesses), "Saved profiles"),
-        ("📢 Campaigns", len(campaigns), "Saved campaigns"),
-        ("🎨 Creative Studio", "Ready", "Create advertising"),
-        ("🎬 Video generation", "Provider", "Check video availability")
-    ]
-
-    metric_cols = st.columns(2)
-
-    for i, (title, value, description) in enumerate(metric_cards):
-        with metric_cols[i % 2]:
-            with st.container(border=True):
-                st.markdown(f"**{title}**")
-                st.subheader(str(value))
-                st.caption(description)
-
-    st.divider()
-    st.subheader("Explore MARKET AI")
-    st.caption("Choose a feature to get started.")
-
-    dashboard_cards = [
-        (
-            "🤖",
-            "AI Assistant",
-            "Chat, ask questions, get business advice and create promotional ideas.",
-            "AI Assistant"
-        ),
-        (
-            "🎬",
-            "AI Creative Studio",
-            "Create promotional videos and advertising materials.",
-            "AI Video Studio"
-        ),
-        (
-            "📱",
-            "Social Hub",
-            "Prepare and manage your social media publishing.",
-            "Social Hub"
-        ),
-        (
-            "🏪",
-            "Market Feed",
-            "Discover businesses, products, services and promotions.",
-            "Publicity Network"
-        ),
-        (
-            "📊",
-            "Campaigns & Analytics",
-            "Manage your campaigns and monitor available performance data.",
-            "Campaigns"
-        ),
-        (
-            "🌍",
-            "Market Live",
-            "Explore business, technology and financial news.",
-            "Market Live"
-        ),
-        (
-            "⚙️",
-            "Settings",
-            "Manage your application configuration.",
-            "Settings"
-        )
-    ]
-
-    dashboard_cols = st.columns(2)
-
-    for i, (icon, title, description, route) in enumerate(dashboard_cards):
-        with dashboard_cols[i % 2]:
-            with st.container(border=True):
-                st.markdown(f"## {icon}")
-                st.markdown(f"**{title}**")
-                st.caption(description)
-
-                if st.button(
-                    "Open feature →",
-                    key=f"dashboard_open_{i}",
-                    use_container_width=True
-                ):
-                    st.session_state["market_ai_page"] = route
-                    st.rerun()
+    st.info(
+        "☰ Open the Menu above to explore MARKET AI features "
+        "and start creating."
+    )
 
 elif page == "Business Profile":
     header("Business Profile","Tell Market AI what you offer so it can create more relevant campaigns.")
