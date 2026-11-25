@@ -260,32 +260,30 @@ if page == "Dashboard":
     st.divider()
 
     # LIVE NEWS SECTION
-    st.markdown("### 🌍 Latest News & Updates")
-    st.caption(
-        "Business, technology, entrepreneurship and news "
-        "from Nigeria and around the world."
-    )
+    st.markdown("### 🌍 Latest News")
+    st.caption("Live headlines from Nigeria and around the world.")
 
     if st.button("🔄 Refresh news", key="dashboard_refresh_news"):
         st.session_state.pop("dashboard_news", None)
+        st.session_state["dashboard_news_index"] = 0
 
     if "dashboard_news" not in st.session_state:
         dashboard_items = []
         seen_links = set()
 
         categories = [
-            "Business",
+            "Nigeria Business",
+            "Nigeria Politics",
+            "Nigeria News",
             "Technology & AI",
-            "Nigeria",
-            "Africa"
+            "Africa",
+            "International"
         ]
 
-        with st.spinner("Loading the latest news..."):
+        with st.spinner("Loading latest headlines..."):
             for category in categories:
                 try:
-                    news = get_news(category)
-
-                    for item in news:
+                    for item in get_news(category):
                         link = item.get("link", "")
 
                         if link and link not in seen_links:
@@ -295,52 +293,53 @@ if page == "Dashboard":
                 except Exception:
                     continue
 
-        st.session_state["dashboard_news"] = dashboard_items[:12]
+        st.session_state["dashboard_news"] = dashboard_items
+        st.session_state["dashboard_news_index"] = 0
 
-    news_items = st.session_state["dashboard_news"]
+    @st.fragment(run_every="20s")
+    def rotating_dashboard_news():
+        items = st.session_state.get("dashboard_news", [])
 
-    if not news_items:
-        st.info(
-            "News is temporarily unavailable. "
-            "Please try refreshing in a moment."
-        )
+        if not items:
+            st.info("News is temporarily unavailable.")
+            return
 
-    else:
-        for start in range(0, min(len(news_items), 6), 3):
-            columns = st.columns(3)
+        start = st.session_state.get("dashboard_news_index", 0)
+        visible_items = items[start:start + 2]
 
-            for index, item in enumerate(
-                news_items[start:start + 3]
-            ):
-                with columns[index]:
-                    with st.container(border=True):
+        st.session_state["dashboard_news_index"] = (
+            start + 2
+        ) % len(items)
 
+        columns = st.columns(len(visible_items))
+
+        for index, item in enumerate(visible_items):
+            with columns[index]:
+                with st.container(border=True):
+                    left, right = st.columns([1, 2])
+
+                    with left:
                         image_url = item.get("image")
-
                         if image_url:
-                            st.image(image_url, use_container_width=True)
+                            st.image(image_url, width=105)
 
+                    with right:
                         st.markdown(
                             f"**{item.get('title', 'News update')}**"
                         )
+                        st.caption(item.get("source", "News source"))
 
-                        st.caption(
-                            f"{item.get('source', 'News source')} · "
-                            f"{item.get('published', '')}"
-                        )
+                    summary = item.get("summary", "")
+                    if summary:
+                        st.write(summary[:180])
 
-                        summary = item.get("summary", "")
-                        if summary:
-                            st.write(summary[:250])
+                    link = item.get("link", "")
+                    if link and link != "#":
+                        st.markdown(f"[Read full story]({link})")
 
-                        link = item.get("link", "")
+        st.caption("Headlines rotate automatically every 20 seconds.")
 
-                        if link and link != "#":
-                            st.markdown(
-                                f"[Read full story]({link})"
-                            )
-
-    st.divider()
+    rotating_dashboard_news()
 
     # PUBLIC MARKET FEED
     st.markdown("### 📢 Market Feed")
