@@ -12,15 +12,9 @@ st.set_page_config(page_title="MARKET AI", page_icon="🌐", layout="wide", init
 init_db()
 if not require_authentication():
     st.stop()
-st.markdown("""
-<style>
-:root {
-    --blue: #1677D2;
-    --green: #16A36A;
-    --navy: #10243A;
-}
 
 # STEP 2.3 — MARKET AI LIGHT AND DARK THEMES
+
 theme_mode = st.session_state.get("market_ai_theme", "Light Mode")
 is_dark = theme_mode == "Dark Mode"
 
@@ -147,6 +141,7 @@ div[data-testid="stSelectbox"] div {{
 }}
 </style>
 """, unsafe_allow_html=True)
+
 
 def header(title, subtitle):
     st.markdown(
