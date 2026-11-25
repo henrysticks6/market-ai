@@ -4,7 +4,7 @@ from services.db import init_db, save_business, list_businesses, save_campaign, 
 from services.ai import generate_marketing_copy, assistant_reply
 from services.video import generate_video, poll_video
 from services.news import get_news
-
+from services.auth import require_authentication, show_logout_button
 st.set_page_config(page_title="MARKET AI", page_icon="🌐", layout="wide", initial_sidebar_state="expanded")
 init_db()
 
