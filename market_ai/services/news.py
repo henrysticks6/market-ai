@@ -1,14 +1,15 @@
 
 import feedparser
-import re
 import requests
+import re
+
 from html import unescape
 from html.parser import HTMLParser
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 
 # ==========================================
-# MARKET AI NEWS SOURCES
+# NEWS SOURCES
 # ==========================================
 
 FEEDS = {
@@ -43,7 +44,7 @@ FEEDS = {
 
 
 # ==========================================
-# CLEAN HTML FROM NEWS CONTENT
+# CLEAN NEWS TEXT
 # ==========================================
 
 class TextCleaner(HTMLParser):
@@ -59,35 +60,20 @@ def clean_text(value):
     value = unescape(str(value or ""))
 
     cleaner = TextCleaner()
-    cleaner.feed(value)
+    try:
+        cleaner.feed(value)
+    except Exception:
+        pass
 
     text = " ".join(cleaner.parts)
-
-    # Remove exposed HTML attributes and URLs
-    text = re.sub(
-        r'href\s*=\s*["\']?.*?["\']?(?=\s|$)',
-        " ",
-        text,
-        flags=re.IGNORECASE
-    )
-
-    text = re.sub(
-        r'https?://\S+',
-        "",
-        text
-    )
-
-    text = re.sub(
-        r'\s+',
-        ' ',
-        text
-    )
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"\s+", " ", text)
 
     return text.strip()
 
 
 # ==========================================
-# EXTRACT PUBLISHER IMAGES
+# FIND IMAGE IN RSS HTML
 # ==========================================
 
 class ImageFinder(HTMLParser):
@@ -96,54 +82,164 @@ class ImageFinder(HTMLParser):
         self.image = None
 
     def handle_starttag(self, tag, attrs):
-        if tag.lower() == "img" and not self.image:
-            attributes = dict(attrs)
+        attributes = dict(attrs)
 
+        if tag.lower() == "img" and not self.image:
             self.image = (
                 attributes.get("src")
                 or attributes.get("data-src")
             )
 
 
+# ==========================================
+# FIND IMAGE IN ARTICLE PAGE
+# ==========================================
+
+class MetadataImageFinder(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.image = None
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+
+        if tag.lower() == "meta" and not self.image:
+            property_name = (
+                attributes.get("property")
+                or attributes.get("name")
+                or ""
+            ).lower()
+
+            if property_name in (
+                "og:image",
+                "og:image:url",
+                "twitter:image",
+                "twitter:image:src"
+            ):
+                self.image = attributes.get("content")
+
+        if tag.lower() == "link" and not self.image:
+            rel = attributes.get("rel", "").lower()
+
+            if "image_src" in rel:
+                self.image = attributes.get("href")
+
+
+def valid_image_url(url):
+    if not url:
+        return None
+
+    url = url.strip()
+
+    if url.startswith("//"):
+        url = "https:" + url
+
+    parsed = urlparse(url)
+
+    if parsed.scheme in ("http", "https") and parsed.netloc:
+        return url
+
+    return None
+
+
+def get_article_image(link):
+    if not link or link == "#":
+        return None
+
+    try:
+        response = requests.get(
+            link,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 Chrome/120.0 Safari/537.36"
+                )
+            },
+            timeout=(3, 5),
+            allow_redirects=True
+        )
+
+        if response.status_code != 200:
+            return None
+
+        parser = MetadataImageFinder()
+        parser.feed(response.text[:300000])
+
+        if parser.image:
+            return valid_image_url(
+                urljoin(response.url, parser.image)
+            )
+
+    except Exception:
+        pass
+
+    return None
+
+
+# ==========================================
+# GET IMAGE FROM RSS OR ARTICLE PAGE
+# ==========================================
+
 def get_image(entry):
 
+    # RSS media fields
     for field in ["media_content", "media_thumbnail"]:
-
         media = entry.get(field, [])
 
         if isinstance(media, dict):
             media = [media]
 
         for item in media:
-            url = item.get("url")
+            url = valid_image_url(item.get("url"))
 
             if url:
                 return url
 
-    # Check image enclosures
+    # RSS image enclosures
     for enclosure in entry.get("enclosures", []):
-
-        url = enclosure.get("href") or enclosure.get("url")
         media_type = enclosure.get("type", "")
 
-        if url and (
-            media_type.startswith("image/")
-            or any(
-                url.lower().split("?")[0].endswith(ext)
-                for ext in [".jpg", ".jpeg", ".png", ".webp"]
+        if media_type.startswith("image/"):
+            url = valid_image_url(
+                enclosure.get("href") or enclosure.get("url")
             )
-        ):
-            return url
 
-    # Check images embedded in summary
+            if url:
+                return url
+
+    # Image embedded in RSS summary
     finder = ImageFinder()
 
     try:
         finder.feed(entry.get("summary", ""))
+
+        if finder.image:
+            url = valid_image_url(finder.image)
+
+            if url:
+                return url
+
     except Exception:
         pass
 
-    return finder.image
+    # Image embedded in article content
+    for content_item in entry.get("content", []):
+        finder = ImageFinder()
+
+        try:
+            finder.feed(content_item.get("value", ""))
+
+            if finder.image:
+                url = valid_image_url(finder.image)
+
+                if url:
+                    return url
+
+        except Exception:
+            pass
+
+    # Last attempt: inspect publisher article page
+    return get_article_image(entry.get("link", ""))
 
 
 # ==========================================
@@ -170,15 +266,14 @@ def get_news(category="Business"):
                 entry.get("title", "News update")
             )
 
-            link = entry.get("link", "#")
+            link = entry.get("link", "")
 
-            if not title or link in seen:
+            if not title or not link or link in seen:
                 continue
 
-            # Keep only valid web article links
-            parsed_link = urlparse(link)
+            parsed = urlparse(link)
 
-            if parsed_link.scheme not in ("http", "https"):
+            if parsed.scheme not in ("http", "https"):
                 continue
 
             seen.add(link)
@@ -187,10 +282,10 @@ def get_news(category="Business"):
                 entry.get("summary", "")
             )
 
-            # Prefer publisher name supplied by RSS
-            source = feed.feed.get(
+            source_info = entry.get("source", {})
+            source = source_info.get(
                 "title",
-                "News source"
+                feed.feed.get("title", "News source")
             )
 
             published = clean_text(
@@ -209,10 +304,10 @@ def get_news(category="Business"):
                 "image": get_image(entry)
             })
 
-            if len(items) >= 12:
+            if len(items) >= 8:
                 break
 
-        if len(items) >= 12:
+        if len(items) >= 8:
             break
 
     return items
