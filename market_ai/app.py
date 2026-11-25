@@ -7,7 +7,8 @@ from services.news import get_news
 from services.auth import require_authentication, show_logout_button
 st.set_page_config(page_title="MARKET AI", page_icon="🌐", layout="wide", initial_sidebar_state="expanded")
 init_db()
-
+if not require_authentication():
+    st.stop()
 st.markdown("""
 <style>
 :root {
