@@ -931,7 +931,7 @@ elif page == "Settings":
         st.write("Only sign out when you want to end your session or switch accounts.")
         show_logout_button()
 
-     elif settings_section == "Appearance":
+    elif settings_section == "Appearance":
         st.subheader("Appearance")
         st.write("Choose how MARKET AI looks.")
 
