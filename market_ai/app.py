@@ -259,6 +259,7 @@ if page == "Dashboard":
 
     st.divider()
 
+  
     # LIVE NEWS SECTION
     st.markdown("### 🌍 Latest News")
     st.caption("Live headlines from Nigeria and around the world.")
@@ -276,6 +277,7 @@ if page == "Dashboard":
             "Nigeria Politics",
             "Nigeria News",
             "Technology & AI",
+            "Business",
             "Africa",
             "International"
         ]
@@ -298,6 +300,7 @@ if page == "Dashboard":
 
     @st.fragment(run_every="20s")
     def rotating_dashboard_news():
+
         items = st.session_state.get("dashboard_news", [])
 
         if not items:
@@ -311,33 +314,41 @@ if page == "Dashboard":
             start + 2
         ) % len(items)
 
-        columns = st.columns(len(visible_items))
+        for item in visible_items:
 
-        for index, item in enumerate(visible_items):
-            with columns[index]:
-                with st.container(border=True):
-                    left, right = st.columns([1, 2])
+            with st.container(border=True):
 
-                    with left:
-                        image_url = item.get("image")
-                        if image_url:
-                            st.image(image_url, width=105)
+                image_col, text_col = st.columns([1, 4])
 
-                    with right:
-                        st.markdown(
-                            f"**{item.get('title', 'News update')}**"
-                        )
-                        st.caption(item.get("source", "News source"))
+                with image_col:
+                    image_url = item.get("image")
+
+                    if image_url:
+                        st.image(image_url, width=90)
+                    else:
+                        st.caption("No image")
+
+                with text_col:
+                    st.markdown(
+                        f"**{item.get('title', 'News update')}**"
+                    )
+
+                    st.caption(
+                        f"{item.get('source', 'News source')} · "
+                        f"{item.get('published', '')}"
+                    )
 
                     summary = item.get("summary", "")
+
                     if summary:
                         st.write(summary[:180])
 
                     link = item.get("link", "")
+
                     if link and link != "#":
                         st.markdown(f"[Read full story]({link})")
 
-        st.caption("Headlines rotate automatically every 20 seconds.")
+        st.caption("Showing up to two stories · Changes every 20 seconds.")
 
     rotating_dashboard_news()
 
