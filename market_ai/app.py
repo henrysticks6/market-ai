@@ -217,8 +217,7 @@ with menu_col:
                 ):
                     st.session_state["market_ai_page"] = route
                     st.rerun()
-        st.divider()
-        show_logout_button()
+       
 # CURRENT PAGE
 page = st.session_state["market_ai_page"]
 
@@ -886,8 +885,70 @@ elif page == "Creator Network":
         if submit and name:
             st.success("Interest recorded for this session. Persistent creator onboarding will be added with the account database.")
 
+
 elif page == "Settings":
-    header("Settings","Configure integrations securely.")
-    st.write("Add secrets in Streamlit Community Cloud → App → Settings → Secrets. Never commit API keys to GitHub.")
-    st.code('OPENAI_API_KEY = "your-key"\nREPLICATE_API_TOKEN = "your-token"\nREPLICATE_MODEL = "owner/model-name"\nSUPABASE_URL = "your-project-url"\nSUPABASE_KEY = "your-anon-key"', language="toml")
-    st.caption("The initial release uses a local SQLite database. For persistent multi-user production use, connect Supabase before public launch.")
+    header("Settings", "Manage your MARKET AI experience.")
+
+    settings_section = st.radio(
+        "Settings categories",
+        [
+            "Account",
+            "Appearance",
+            "Navigation",
+            "Audio & Sound",
+            "Notifications",
+            "Privacy & Security",
+            "About MARKET AI"
+        ],
+        horizontal=False
+    )
+
+    if settings_section == "Account":
+        st.subheader("Account")
+        st.caption("Manage your MARKET AI account.")
+
+        st.success("You are currently signed in.")
+
+        st.divider()
+        st.subheader("Sign out")
+        st.write("Only sign out when you want to end your session or switch accounts.")
+        show_logout_button()
+
+    elif settings_section == "Appearance":
+        st.subheader("Appearance")
+        st.write("Choose how MARKET AI looks.")
+
+        theme = st.radio(
+            "Display theme",
+            ["Light Mode", "Dark Mode"],
+            horizontal=True
+        )
+
+        st.info(f"Selected theme: {theme}")
+        st.caption("Persistent theme switching will be connected in a later step.")
+
+    elif settings_section == "Navigation":
+        st.subheader("Navigation")
+        st.write("Manage how you move around MARKET AI.")
+        st.info("Workspace navigation preferences will be available here.")
+
+    elif settings_section == "Audio & Sound":
+        st.subheader("Audio & Sound")
+        st.write("Your personal audio workspace.")
+        st.info("Music Player, Advert Audio Preview and Audio Library will be added here.")
+
+    elif settings_section == "Notifications":
+        st.subheader("Notifications")
+        st.write("Manage your app alerts and notifications.")
+        st.info("Notification preferences will be added here.")
+
+    elif settings_section == "Privacy & Security":
+        st.subheader("Privacy & Security")
+        st.write("Keep your account and information secure.")
+        st.info("Account security controls will be added here.")
+
+    elif settings_section == "About MARKET AI":
+        st.subheader("About MARKET AI")
+        st.write("Every Business Deserves a Voice.")
+        st.caption("Your creative workspace for advertising, publicity and business growth.")
+        st.write("Version 1.0")
