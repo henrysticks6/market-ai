@@ -1,7 +1,15 @@
+
 import feedparser
+import re
+import requests
+from html import unescape
 from html.parser import HTMLParser
+from urllib.parse import urlparse
 
 
+# ==========================================
+# MARKET AI NEWS SOURCES
+# ==========================================
 
 FEEDS = {
     "Nigeria Business": [
@@ -34,6 +42,54 @@ FEEDS = {
 }
 
 
+# ==========================================
+# CLEAN HTML FROM NEWS CONTENT
+# ==========================================
+
+class TextCleaner(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.parts = []
+
+    def handle_data(self, data):
+        self.parts.append(data)
+
+
+def clean_text(value):
+    value = unescape(str(value or ""))
+
+    cleaner = TextCleaner()
+    cleaner.feed(value)
+
+    text = " ".join(cleaner.parts)
+
+    # Remove exposed HTML attributes and URLs
+    text = re.sub(
+        r'href\s*=\s*["\']?.*?["\']?(?=\s|$)',
+        " ",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    text = re.sub(
+        r'https?://\S+',
+        "",
+        text
+    )
+
+    text = re.sub(
+        r'\s+',
+        ' ',
+        text
+    )
+
+    return text.strip()
+
+
+# ==========================================
+# EXTRACT PUBLISHER IMAGES
+# ==========================================
+
 class ImageFinder(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -42,6 +98,7 @@ class ImageFinder(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag.lower() == "img" and not self.image:
             attributes = dict(attrs)
+
             self.image = (
                 attributes.get("src")
                 or attributes.get("data-src")
@@ -49,61 +106,105 @@ class ImageFinder(HTMLParser):
 
 
 def get_image(entry):
-    # Images supplied through RSS media fields
+
     for field in ["media_content", "media_thumbnail"]:
+
         media = entry.get(field, [])
+
         if isinstance(media, dict):
             media = [media]
 
         for item in media:
             url = item.get("url")
+
             if url:
                 return url
 
-    # Images supplied as RSS enclosures
+    # Check image enclosures
     for enclosure in entry.get("enclosures", []):
+
         url = enclosure.get("href") or enclosure.get("url")
         media_type = enclosure.get("type", "")
 
         if url and (
             media_type.startswith("image/")
-            or any(url.lower().split("?")[0].endswith(ext)
-                   for ext in [".jpg", ".jpeg", ".png", ".webp"])
+            or any(
+                url.lower().split("?")[0].endswith(ext)
+                for ext in [".jpg", ".jpeg", ".png", ".webp"]
+            )
         ):
             return url
 
-    # Look for an image in the article summary HTML
+    # Check images embedded in summary
     finder = ImageFinder()
-    finder.feed(entry.get("summary", ""))
+
+    try:
+        finder.feed(entry.get("summary", ""))
+    except Exception:
+        pass
 
     return finder.image
 
 
+# ==========================================
+# GET NEWS
+# ==========================================
+
 def get_news(category="Business"):
+
     urls = FEEDS.get(category, FEEDS["Business"])
+
     items = []
     seen = set()
 
     for feed_url in urls:
-        feed = feedparser.parse(feed_url)
+
+        try:
+            feed = feedparser.parse(feed_url)
+        except Exception:
+            continue
 
         for entry in feed.entries:
-            title = entry.get("title", "Untitled")
+
+            title = clean_text(
+                entry.get("title", "News update")
+            )
+
             link = entry.get("link", "#")
 
-            if link in seen:
+            if not title or link in seen:
+                continue
+
+            # Keep only valid web article links
+            parsed_link = urlparse(link)
+
+            if parsed_link.scheme not in ("http", "https"):
                 continue
 
             seen.add(link)
 
-            items.append({
-                "title": title,
-                "source": feed.feed.get("title", "News source"),
-                "published": entry.get(
+            summary = clean_text(
+                entry.get("summary", "")
+            )
+
+            # Prefer publisher name supplied by RSS
+            source = feed.feed.get(
+                "title",
+                "News source"
+            )
+
+            published = clean_text(
+                entry.get(
                     "published",
                     "Publication date unavailable"
-                ),
-                "summary": entry.get("summary", "")[:500],
+                )
+            )
+
+            items.append({
+                "title": title,
+                "source": clean_text(source),
+                "published": published,
+                "summary": summary[:500],
                 "link": link,
                 "image": get_image(entry)
             })
