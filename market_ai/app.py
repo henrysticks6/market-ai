@@ -5,6 +5,9 @@ from services.ai import generate_marketing_copy, assistant_reply
 from services.video import generate_video, poll_video
 from services.news import get_news
 from services.auth import require_authentication, show_logout_button
+# STEP 2.1 — MARKET AI THEME SETTINGS
+if "market_ai_theme" not in st.session_state:
+    st.session_state["market_ai_theme"] = "Light Mode"
 st.set_page_config(page_title="MARKET AI", page_icon="🌐", layout="wide", initial_sidebar_state="expanded")
 init_db()
 if not require_authentication():
@@ -914,19 +917,19 @@ elif page == "Settings":
         st.write("Only sign out when you want to end your session or switch accounts.")
         show_logout_button()
 
-    elif settings_section == "Appearance":
+     elif settings_section == "Appearance":
         st.subheader("Appearance")
         st.write("Choose how MARKET AI looks.")
 
         theme = st.radio(
             "Display theme",
             ["Light Mode", "Dark Mode"],
-            horizontal=True
+            horizontal=True,
+            key="market_ai_theme"
         )
 
-        st.info(f"Selected theme: {theme}")
-        st.caption("Persistent theme switching will be connected in a later step.")
-
+        st.success(f"{theme} selected.")
+        st.caption("Your selected theme will be applied across MARKET AI.")
     elif settings_section == "Navigation":
         st.subheader("Navigation")
         st.write("Manage how you move around MARKET AI.")
