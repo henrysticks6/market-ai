@@ -1,1 +1,61 @@
 
+import streamlit as st
+from supabase import create_client
+
+
+@st.cache_resource
+def get_supabase():
+    url = st.secrets.get("SUPABASE_URL")
+    key = st.secrets.get("SUPABASE_KEY")
+
+    if not url or not key:
+        raise RuntimeError("Supabase URL or publishable key is missing.")
+
+    return create_client(url, key)
+
+
+def register_user(surname, first_name, email, phone, password):
+    supabase = get_supabase()
+
+    response = supabase.auth.sign_up({
+        "email": email.strip().lower(),
+        "password": password,
+        "options": {
+            "email_redirect_to": "https://market-ai-bkgv5tzjyqfracyyab77bp.streamlit.app/",
+            "data": {
+                "surname": surname.strip(),
+                "first_name": first_name.strip(),
+                "phone": phone.strip()
+            }
+        }
+    })
+
+    return response
+
+
+def login_user(email, password):
+    supabase = get_supabase()
+
+    response = supabase.auth.sign_in_with_password({
+        "email": email.strip().lower(),
+        "password": password
+    })
+
+    return response
+
+
+def logout_user():
+    supabase = get_supabase()
+    supabase.auth.sign_out()
+
+
+def reset_password(email):
+    supabase = get_supabase()
+
+    supabase.auth.reset_password_for_email(
+        email.strip().lower(),
+        {
+            "redirect_to": "https://market-ai-bkgv5tzjyqfracyyab77bp.streamlit.app/"
+        }
+    )
+
