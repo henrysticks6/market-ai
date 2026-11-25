@@ -324,7 +324,7 @@ if page == "Dashboard":
                     image_url = item.get("image")
 
                     if image_url:
-                        st.image(image_url, width=90)
+                        st.image(image_url, width=120)
                     else:
                         st.caption("No image")
 
