@@ -217,7 +217,8 @@ with menu_col:
                 ):
                     st.session_state["market_ai_page"] = route
                     st.rerun()
-
+        st.divider()
+        show_logout_button()
 # CURRENT PAGE
 page = st.session_state["market_ai_page"]
 
